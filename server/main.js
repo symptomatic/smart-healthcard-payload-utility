@@ -104,6 +104,9 @@ Meteor.methods({
     console.log(publicKey);
     console.log('');
 
+
+    
+
     console.log('');
     console.log('---------------Stringified Payload------------------------')
     console.log('');
@@ -140,17 +143,6 @@ Meteor.methods({
     // // let payload_base64 = deflatedPayload;
     // console.log(payload_base64);
     
-    let json_web_signature = await jose.JWS
-      .createSign({ format: 'compact', fields: { zip: 'DEF' }}, signingKey)
-      .update(deflatedPayload)
-      .final()
-      .then(function(result){ 
-        // console.log('');
-        // console.log('------------jose.JWS.createSign() result----------------');
-        // console.log('');
-        // console.log(result); 
-        return result;
-      });
 
     // let json_web_signature = jws.sign({
     //     header: { alg: 'ES256', zip: 'DEF', kid: get(keychain, 'keys[0].kid')},
@@ -163,6 +155,19 @@ Meteor.methods({
     //     payload: payload_base64
     //     // encoding: 'base64'
     // });
+
+    
+    let json_web_signature = await jose.JWS
+      .createSign({ format: 'compact', fields: { zip: 'DEF' }}, signingKey)
+      .update(deflatedPayload)
+      .final()
+      .then(function(result){ 
+        // console.log('');
+        // console.log('------------jose.JWS.createSign() result----------------');
+        // console.log('');
+        // console.log(result); 
+        return result;
+      });
 
     console.log('');
     console.log('------------JSON Web Signature (JWS)----------------------')
@@ -198,17 +203,17 @@ async verifyHealthCard(json_web_signature){
     var decoded = jws.decode(json_web_signature);
     console.log(decoded);
 
-    // console.log('')
-    // console.log('-------------Is Verified----------------------------------')
-    // console.log('')
+    console.log('')
+    console.log('-------------Is Verified----------------------------------')
+    console.log('')
 
-    // // let isVerified = jws.verify(json_web_signature, 'ES256', privatePem);
-    // let isVerified = jws.verify(json_web_signature, 'ES256', jwkToPem(publicKey));
-    // console.log(isVerified ? "YES" : "NO")   
+    // let isVerified = jws.verify(json_web_signature, 'ES256', privatePem);
+    let isVerified = jws.verify(json_web_signature, 'ES256', jwkToPem(publicKey));
+    console.log(isVerified ? "YES" : "NO")   
 
-    // console.log('')
-    // console.log('------------JWS Parts-------------------------------------')
-    // console.log('')
+    console.log('')
+    console.log('------------JWS Parts-------------------------------------')
+    console.log('')
 
 
     const parts = json_web_signature.split('.');
