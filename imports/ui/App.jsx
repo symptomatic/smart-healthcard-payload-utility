@@ -1,11 +1,10 @@
 import React from 'react';
-import { Hello } from './Hello.jsx';
+import { HelloHealthCard } from './HelloHealthCard.jsx';
 import { Info } from './Info.jsx';
 
 export const App = () => (
   <div>
-    <h1>Welcome to Meteor!</h1>
-    <Hello/>
-    <Info/>
+    <h1>SMART HealthCard Reference (Node/Meteor)</h1>
+    <HelloHealthCard/>
   </div>
 );
