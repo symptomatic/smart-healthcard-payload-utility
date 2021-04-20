@@ -101,8 +101,6 @@ Meteor.methods({
     console.log('-----------Public Key (.well-known/jwks.json)-------------')        
     console.log('');
 
-    // // console.log('verifyHealthCard.private.jwks.json', get(keychain, 'keys[0]'))
-
     console.log(publicKey);
     console.log('');
 
