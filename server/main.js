@@ -8,7 +8,8 @@ import keychain from '../certs/jwks.json';
 let publicKey = get(keychain, 'keys[0]');
 
 import privateKeychain from '../certs/private.jwks.json';
-let signingKey = get(privateKeychain, 'keys[0]');
+// let signingKey = get(privateKeychain, 'keys[0]');
+
 
 
 import fs from 'fs';
@@ -23,29 +24,19 @@ import jose, { JWK, JWS } from 'node-jose';
 import { base64, base64url } from "rfc4648";
 import jws from 'jws';
 import InflateAuto from 'inflate-auto';
-// import base64url from 'base64url';
-// import * as base64 from "byte-base64";
 
 
-
-// let privatePem;
-// let signingKey;
-// try {
-//   // assumes that we're running from the .meteor/local/build/* folder
-//   privatePem = fs.readFileSync('../../../../../certs/ec_private.pem', 'utf8');
-//   signingKey = privatePem;
-//   console.log(privatePem)
-// } catch (err) {
-//   console.error(err)
-// }
+let privatePem
+try {
+  // assumes that we're running from the .meteor/local/build/* folder
+  privatePem = fs.readFileSync('../../../../../certs/ec_private.pem', 'utf8')
+  console.log(privatePem)
+} catch (err) {
+  console.error(err)
+}
 
 
-
-
-Meteor.startup(() => {
-
-  
-});
+let signingKey = get(privateKeychain, 'keys[0]');
 
 
 
@@ -104,9 +95,6 @@ Meteor.methods({
     console.log(publicKey);
     console.log('');
 
-
-    
-
     console.log('');
     console.log('---------------Stringified Payload------------------------')
     console.log('');
@@ -115,6 +103,14 @@ Meteor.methods({
     let vcPayloadString_trimmed = vcPayloadString.trim();
     console.log(vcPayloadString_trimmed);
 
+    // console.log('');
+    // console.log('---------------Stringified Payload (btoa)---------------------')
+    // console.log('');
+
+    // let vcPayloadString_btoa = btoa(vcPayloadString_trimmed);
+    // console.log(vcPayloadString_btoa);
+
+
     console.log('');
     console.log('-------------Raw Deflated Payload (Buffer)----------------')
     console.log('');
@@ -122,52 +118,28 @@ Meteor.methods({
     let deflatedPayload = zlib.deflateRawSync(vcPayloadString_trimmed);
     console.log(deflatedPayload);
 
-    // console.log('')
-    // console.log('-------------Raw Deflated Payload (Uint8Array)------------')
-    // console.log('')        
-    // console.log(deflatedPayload.buffer);
+    console.log('');
+    console.log('---------------Stringified Payload (btoa)---------------------')
+    console.log('');
 
-
-    // console.log('')
-    // console.log('-------------Buffer (Experimental)------------------------')
-    // console.log('')        
-    // console.log(Buffer.from(deflatedPayload));
-    // // console.log(Buffer.from(deflatedPayload.buffer));
-
-    // console.log('');
-    // console.log('-------------Payload Base64 String------------------------')
-    // console.log('');      
-
-    // // per: Matt Printz
-    // let payload_base64 = deflatedPayload.toString('base64');
-    // // let payload_base64 = deflatedPayload;
-    // console.log(payload_base64);
+    let deflatedPayload_btoa = btoa(deflatedPayload);
+    console.log(deflatedPayload_btoa);
     
+    // let json_web_signature = await jose.JWS
+    //   .createSign({ format: 'compact', fields: { zip: 'DEF' }}, signingKey)
+    //   .update(deflatedPayload)
+    //   .final()
+    //   .then(function(result){ 
+    //     return result;
+    //   });
 
-    // let json_web_signature = jws.sign({
-    //     header: { alg: 'ES256', zip: 'DEF', kid: get(keychain, 'keys[0].kid')},
-    //     secret: privatePem,
-    //     // payload: vcPayloadString_trimmed,
-    //     // payload: deflatedPayload,                                          // 4 - huge signature
-    //     // payload: Buffer.from(deflatedPayload),                             // 5 - inflate error: invalid stored block lengths
-    //     // payload: deflatedPayload.buffer,                                   // 6 - no payload
-    //     // payload: Buffer.from(deflatedPayload.buffer),                      // 7 - inflate error: invalid block type
-    //     payload: payload_base64
-    //     // encoding: 'base64'
-    // });
-
-    
-    let json_web_signature = await jose.JWS
-      .createSign({ format: 'compact', fields: { zip: 'DEF' }}, signingKey)
-      .update(deflatedPayload)
-      .final()
-      .then(function(result){ 
-        // console.log('');
-        // console.log('------------jose.JWS.createSign() result----------------');
-        // console.log('');
-        // console.log(result); 
-        return result;
-      });
+    let json_web_signature = jws.sign({
+      // header: { alg: 'ES256', zip: 'DEF', kid: get(keychain, 'keys[0].kid')},
+      header: { alg: 'ES256', zip: 'DEF', kid: get(keychain, 'keys[0].kid')},
+      secret: privatePem,
+      payload: deflatedPayload_btoa,
+      encoding: 'base64'
+    });
 
     console.log('');
     console.log('------------JSON Web Signature (JWS)----------------------')
@@ -226,31 +198,73 @@ async verifyHealthCard(json_web_signature){
     const rawPayload = parts[1].trim();
     console.log(rawPayload);
 
-    // console.log('')
-    // console.log('------------JWS Payload (atob)----------------------------')
-    // console.log('')
+    console.log('')
+    console.log('------------Payload Buffer--------------------------------')    
+    console.log('')
 
-    // let rawPayload_atob = atob(rawPayload)
-    // console.log(rawPayload_atob);
+    
+    let buffer_from_payload = Buffer.from(rawPayload);
+    console.log(buffer_from_payload);
+
 
 
     console.log('')
-    // console.log('------------Payload Buffer (atob, base64)-----------------')
-    console.log('------------Payload Buffer -------------------------------')
+    console.log('------------Payload Buffer (from base64)------------------')    
     console.log('')
 
-    // // per Matt Printz
-    // let buffer_from_base64_payload_atob = Buffer.from(rawPayload_atob);
-    let buffer_from_base64_payload_atob = Buffer.from(rawPayload);
-    console.log(buffer_from_base64_payload_atob);
+    
+    let buffer_from_base64_payload = Buffer.from(rawPayload, 'base64');
+    console.log(buffer_from_base64_payload);
+
+
+    console.log('')
+    console.log('------------Payload Buffer (atob)----------------------------')    
+    console.log('')
+
+    
+    let buffer_from_atob_payload = Buffer.from(atob(rawPayload));
+    console.log(buffer_from_atob_payload);
+
+
+
+    console.log('')
+    console.log('------------Payload Buffer (from base64, atob)------------------')    
+    console.log('')
+
+    
+    let buffer_from_atob_base64_payload = Buffer.from(atob(rawPayload), 'base64');
+    console.log(buffer_from_atob_base64_payload);
+
+
+
+    console.log('')
+    console.log('------------Payload Buffer (btoa)----------------------------')    
+    console.log('')
+
+    
+    let buffer_from_btoa_payload = Buffer.from(btoa(rawPayload));
+    console.log(buffer_from_btoa_payload);
+
+
+
+    console.log('')
+    console.log('------------Payload Buffer (from base64, btoa)------------------')    
+    console.log('')
+
+    
+    let buffer_from_btoa_base64_payload = Buffer.from(btoa(rawPayload), 'base64');
+    console.log(buffer_from_btoa_base64_payload);
+
+
+
 
 
     console.log('')
     console.log('------------Decompressed Payload--------------------------')
     console.log('')
 
-    // const decompressed = InflateAuto.inflateAutoSync(buffer_from_base64_payload_atob);    
-    const decompressed = zlib.inflateRawSync(buffer_from_base64_payload_atob);    
+        
+    const decompressed = zlib.inflateRawSync(buffer_from_base64_payload);    
     const decompressed_string = decompressed.toString('utf8')      
     console.log(decompressed_string); 
 
@@ -268,14 +282,6 @@ async decodeHealthCard(token){
     const parts = json_web_signature.split('.');
     const rawPayload = parts[1].trim();
     console.log(rawPayload)
-
-    // console.log('')
-    // console.log('------------JWS Payload (atob)----------------------------')
-    // console.log('')
-
-    // let rawPayload_atob = atob(rawPayload)
-    // console.log(rawPayload_atob);
-
 
     console.log('')
     // console.log('------------Payload Buffer (atob, base64)-----------------')
@@ -297,5 +303,5 @@ async decodeHealthCard(token){
     console.log(decompressed_string); 
 
     return decompressed_string;
-}
+  }
 })

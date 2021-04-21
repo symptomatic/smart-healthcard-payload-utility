@@ -9,6 +9,11 @@ function compactRecord(fhirResource){
   delete result._id;
   delete result.id;
   delete result.meta;
+  delete result.requester;
+  delete result.reporter;
+  delete result.vaccineCode.text
+  delete result.wasNotGiven;
+  delete result.reported;
 
   return result;
 }
